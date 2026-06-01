@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #F0F2F5;
+    color: #111B21;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ── Scrollbar ────────────────────────────────────────── */
+.scrollbar-thin::-webkit-scrollbar       { width: 3px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #D1D7DB; border-radius: 99px; }
+
+/* ── Keyframes ────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* ── Animation utilities ──────────────────────────────── */
+.anim-fade-in-up  { animation: fadeInUp   0.5s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-fade-in     { animation: fadeIn     0.4s ease both; }
+.anim-scale-in    { animation: scaleIn    0.45s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-slide-down  { animation: slideDown  0.3s ease both; }
+.anim-slide-left  { animation: slideInLeft  0.4s cubic-bezier(.22,.68,0,1.2) both; }
+.anim-slide-right { animation: slideInRight 0.4s cubic-bezier(.22,.68,0,1.2) both; }
+
+/* Scroll-reveal */
+.reveal         { opacity: 0; }
+.reveal.in-view { animation: fadeInUp 0.55s cubic-bezier(.22,.68,0,1.2) both; }
+
+/* ── Quote box ───────────────────────────────────────── */
+.quote-box {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.quote-box-text {
+  position: relative;
+  color: #111B21;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(1.05rem, 0.8rem + 1.2vw, 1.5rem);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.55;
+  margin: 0;
+  border: 2px solid #00A884;
+  border-radius: 18px;
+  padding: 28px 32px;
+}
+
+.quote-box-text::after {
+  content: "";
+  position: absolute;
+  border: 2px solid #00A884;
+  border-radius: 0 100% 0 0;
+  width: 52px;
+  height: 52px;
+  bottom: -54px;
+  left: 46px;
+  border-bottom: none;
+  border-left: none;
+  z-index: 3;
+}
+
+.quote-box-text::before {
+  content: "";
+  position: absolute;
+  width: 72px;
+  border: 5px solid #FFFFFF;
+  bottom: -3px;
+  left: 46px;
+  z-index: 2;
+}
+
+.quote-box-author {
+  position: relative;
+  z-index: 1;
+  margin-left: 124px;
+  padding-left: 10px;
+  padding-top: 18px;
+  color: #667781;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* ── Skeleton shimmer ─────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, #F0F2F5 25%, #E9EDEF 50%, #F0F2F5 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
