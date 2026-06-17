@@ -25,6 +25,17 @@ Ask yourself:
 Be strict. Vague emotional content that could apply to any situation is NOT sufficient.
 Generic advice without a named framework is NOT sufficient.
 
+Named frameworks from these books include:
+- NVC 4 steps: Observation, Feeling, Need, Request (Nonviolent Communication)
+- Attachment styles: secure, anxious, avoidant, protest behavior, deactivating strategies (Attached)
+- CBT tools: cognitive distortions, thought records, behavioral activation (Feeling Good)
+- Transactional analysis: ego states, psychological games (Games People Play)
+- Somatic responses: body-based trauma reactions (The Body Keeps the Score)
+- Cognitive biases: System 1/System 2, heuristics (Thinking Fast and Slow)
+
+If at least 2 chunks reference or apply any of the above AND are directly relevant
+to the user's specific situation, that is SUFFICIENT.
+
 Answer with exactly one word on the first line:
 SUFFICIENT or INSUFFICIENT
 
@@ -49,7 +60,7 @@ def run(state: AgentState) -> AgentState:
     first_line = lines[0].strip().upper()
     reason = lines[1].strip() if len(lines) > 1 else ""
 
-    state["is_enough"] = "SUFFICIENT" in first_line
+    state["is_enough"] = first_line == "SUFFICIENT"
     state["retry_reason"] = reason
 
     if state["is_enough"]:

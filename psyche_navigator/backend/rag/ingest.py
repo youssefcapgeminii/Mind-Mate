@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -10,6 +11,27 @@ from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 import chromadb
+
+_JUNK_PATTERNS = [
+    r"coupon\s+code",
+    r"save\s+an?\s+additional\s+\d+\s*%",
+    r"companion\s+workbook",
+    r"nonviolentcommunication\.com",
+]
+
+_INDEX_ENTRY = re.compile(r'\b[\w\s]+,\s+\d+[–\-]\d+')
+
+
+def _is_content(text: str) -> bool:
+    if len(text.strip()) < 120: # too short to be meaningful (header/footer, table of contents, etc.)
+        return False
+    lower = text.lower()
+    for pattern in _JUNK_PATTERNS:
+        if re.search(pattern, lower):
+            return False
+    if len(_INDEX_ENTRY.findall(text)) > 4:
+        return False
+    return True
 
 
 BOOKS = {
@@ -40,8 +62,9 @@ def ingest():
         chunks = splitter.split_documents(pages)
         for chunk in chunks:
             chunk.metadata["source"] = book_name
-        all_chunks.extend(chunks)
-        print(f"  -> {len(chunks)} chunks")
+        clean = [c for c in chunks if _is_content(c.page_content)]
+        all_chunks.extend(clean)
+        print(f"  -> {len(clean)}/{len(chunks)} chunks kept after filtering")
 
     total = len(all_chunks)
     print(f"\nTotal: {total} chunks. Storing in ChromaDB (local, no rate limits)...")
