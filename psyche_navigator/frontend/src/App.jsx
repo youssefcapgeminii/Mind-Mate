@@ -46,9 +46,8 @@ export default function App() {
             setActiveNode(nodeName)
             if (nodeName === 'query_builder') setRetries(r => r + 1)
             if (!output) continue
-            if (nodeName === 'guard' && output.final_response) finalResponse = output.final_response
+            if (output.final_response) finalResponse = output.final_response
             if (nodeName === 'psychologist') {
-              finalResponse = output.final_response
               frameworks = output.active_frameworks ?? []
               setActiveFrameworks(frameworks)
             }

@@ -1,31 +1,32 @@
 from langchain_core.prompts import ChatPromptTemplate
 from agent.state import AgentState
 from llm_factory import make_llm
-from agent.logger import log_node_start, log_input, log_llm, log_ok, log_warn, log_info, log_route
+from agent.logger import log_node_start, log_input, log_ok, log_warn, log_info, log_route
 
 llm = make_llm(temperature=0)
 
 prompt = ChatPromptTemplate.from_template("""
-Evaluate whether these book excerpts are sufficient to give
-concrete, specific advice for this personal situation.
+Evaluate whether these book excerpts are useful enough to give
+meaningful advice for this personal situation.
 
 User situation: {user_message}
 
 Retrieved excerpts:
 {chunks}
 
+The excerpts come from general psychology books, not situation-specific guides.
+They will rarely mention the user's exact scenario (e.g. "manager in a meeting").
+Instead, look for underlying psychological principles that a skilled psychologist
+could APPLY to the user's situation.
+
 Ask yourself:
-1. Do at least 2 excerpts contain a real, actionable framework directly
-   relevant to THIS situation — not just vaguely related emotional content?
-2. Would a psychologist actually use these specific excerpts to help this person?
-3. Are the excerpts about the right topic (e.g. if user mentions a manager,
-   are the chunks about workplace dynamics or communication — not about dates,
-   daydreaming, or unrelated personal struggles)?
+1. Do at least 2 excerpts contain a psychological concept, framework, or technique
+   that can be applied to the user's situation — even if the excerpt itself
+   discusses a different surface-level scenario?
+2. Could a psychologist use the principles in these excerpts to give this person
+   useful advice?
 
-Be strict. Vague emotional content that could apply to any situation is NOT sufficient.
-Generic advice without a named framework is NOT sufficient.
-
-Named frameworks from these books include:
+Applicable frameworks from these books include:
 - NVC 4 steps: Observation, Feeling, Need, Request (Nonviolent Communication)
 - Attachment styles: secure, anxious, avoidant, protest behavior, deactivating strategies (Attached)
 - CBT tools: cognitive distortions, thought records, behavioral activation (Feeling Good)
@@ -33,8 +34,9 @@ Named frameworks from these books include:
 - Somatic responses: body-based trauma reactions (The Body Keeps the Score)
 - Cognitive biases: System 1/System 2, heuristics (Thinking Fast and Slow)
 
-If at least 2 chunks reference or apply any of the above AND are directly relevant
-to the user's specific situation, that is SUFFICIENT.
+If at least 2 chunks contain principles from any of the above that can be
+applied to the user's situation, that is SUFFICIENT. The excerpts do NOT need
+to mention the user's exact scenario — transferable principles count.
 
 Answer with exactly one word on the first line:
 SUFFICIENT or INSUFFICIENT
@@ -49,13 +51,17 @@ def run(state: AgentState) -> AgentState:
     log_input("EVALUATOR", "for query", f'"{state["messages"][-1]["content"][:100]}..."')
 
     chunks_text = "\n\n".join([
-        f"[{c['source_book']}] {c['text']}"
-        for c in state["retrieved_chunks"]
+        f"[{chunk['source_book']}] {chunk['text']}"
+        for chunk in state["retrieved_chunks"]
     ])
+    # ask the LLM: are these chunks good enough to give advice?
     response = (prompt | llm).invoke({
         "user_message": state["messages"][-1]["content"],
         "chunks":       chunks_text,
     })
+    # the LLM returns two lines:
+    # line 1: "SUFFICIENT" or "INSUFFICIENT"
+    # line 2: the reason why
     lines = response.content.strip().split("\n")
     first_line = lines[0].strip().upper()
     reason = lines[1].strip() if len(lines) > 1 else ""
@@ -72,8 +78,21 @@ def run(state: AgentState) -> AgentState:
         log_warn("EVALUATOR", "reason", reason)
         attempts = state["retrieval_attempts"]
         if attempts >= 3:
-            log_warn("EVALUATOR", "max attempts reached", f"{attempts}/3 — forcing route to psychologist")
-            log_route("EVALUATOR", "psychologist (forced)")
+            # all 3 retrieval attempts failed — ask the user for more details
+            # instead of giving advice based on bad chunks
+            state["final_response"] = (
+                "I want to give you the best advice I can, but I need a bit more context. "
+                "Could you share more details about your situation? For example:\n\n"
+                "- Who is involved? (a manager, partner, friend, family member)\n"
+                "- What specifically happened?\n"
+                "- How is it making you feel?\n\n"
+                "The more specific you are, the better I can help."
+            )
+            state["action_plan"] = []
+            state["active_frameworks"] = []
+            state["follow_up_question"] = None
+            log_warn("EVALUATOR", "max attempts reached", f"{attempts}/3 — asking user for more details")
+            log_route("EVALUATOR", "END")
         else:
             log_info("EVALUATOR", "attempts used", f"{attempts}/3 — retrying")
             log_route("EVALUATOR", "query_builder")
