@@ -31,7 +31,7 @@ export default function App() {
 
       const reader = res.body.getReader()
       const decoder = new TextDecoder()
-      let finalResponse = null, actionPlan = null, frameworks = [], followUpQuestion = null
+      let finalResponse = null, actionPlan = null, frameworks = [], followUpQuestion = null, errorMessage = null
 
       while (true) {
         const { done, value } = await reader.read()
@@ -43,6 +43,10 @@ export default function App() {
             const event = JSON.parse(line.slice(6))
             const { node: nodeName, output } = event
             if (!nodeName || nodeName === '__end__') continue
+            if (nodeName === '__error__') {
+              errorMessage = event.message
+              continue
+            }
             setActiveNode(nodeName)
             if (nodeName === 'query_builder') setRetries(r => r + 1)
             if (!output) continue
@@ -62,6 +66,11 @@ export default function App() {
           role: 'assistant', content: finalResponse,
           actionPlan: actionPlan ?? [], sources: frameworks,
           followUpQuestion: followUpQuestion,
+        }])
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: errorMessage ?? 'Something went wrong. Please check that the backend is running.',
         }])
       }
     } catch {

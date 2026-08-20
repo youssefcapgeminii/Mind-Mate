@@ -1,0 +1,52 @@
+[
+  {
+    "book": "Feeling Good",
+    "question": "I keep telling myself I'm a failure every time I make a small mistake at work. How do I stop doing this?",
+    "ground_truth": "Feeling Good calls this 'Labeling and Mislabeling' — creating a completely negative self-image based on your errors (e.g. thinking 'I'm a failure' instead of 'I made a mistake'). Burns describes it as an extreme form of overgeneralization and calls it self-defeating and irrational, since your self cannot be equated with any one thing you do. The book's core remedy is the 'triple-column technique' / Daily Record of Dysfunctional Thoughts: writing the automatic thought, naming the distortion, and writing a more rational response."
+  },
+  {
+    "book": "Feeling Good",
+    "question": "Whenever one thing goes wrong in my day, I feel like the whole day is ruined. Is there a name for this pattern?",
+    "ground_truth": "This is 'All-or-Nothing Thinking' in Feeling Good — the tendency to evaluate things in extreme, black-or-white categories rather than on a continuum (Burns gives the example of a straight-A student getting one B and concluding 'I'm a total failure'). Burns notes this forms the basis for perfectionism and is unrealistic because life is rarely completely one way or the other."
+  },
+  {
+    "book": "Attached",
+    "question": "My partner pulls away whenever I want to talk about our relationship, and it makes me panic and text them repeatedly. What's going on?",
+    "ground_truth": "Attached calls repeated calls/texts driven by fear of losing closeness 'protest behavior' — a reaction of the attachment system, the same mechanism that makes a child search frantically for a separated parent. If your partner responds by 'deactivating' (withdrawing, suppressing intimacy) rather than reassuring you, the book calls this the 'anxious-avoidant trap': a cycle where each partner's coping strategy escalates the other's insecurity."
+  },
+  {
+    "book": "Attached",
+    "question": "I feel suffocated whenever someone gets too emotionally close to me in a relationship. Is that normal?",
+    "ground_truth": "Attached describes this as using 'deactivating strategies' — everyday behaviors or thoughts used to squelch intimacy and keep a partner at arm's length. The book explains that avoidant people do have a need for closeness but make a concerted effort to repress it, and that the more these strategies are used, the more alone and unhappy a person tends to feel in the relationship."
+  },
+  {
+    "book": "The Body Keeps the Score",
+    "question": "I had a stressful car accident last year and now my body still reacts with panic near roads, even though I know I'm safe. Why?",
+    "ground_truth": "The Body Keeps the Score explains that the amygdala — the brain area that warns us of danger and activates the body's stress response — can keep reacting with alarm to trauma-related cues long after the actual danger has passed. Van der Kolk notes that fight/flight/freeze signals can continue after the danger is over, so the body responds as though still under threat even when the rational mind knows it's safe."
+  },
+  {
+    "book": "The Body Keeps the Score",
+    "question": "Why do I go completely numb and disconnected during arguments with my family?",
+    "ground_truth": "The Body Keeps the Score describes dissociation as 'the essence of trauma' — a way the overwhelming experience gets split off so that sounds, images, and emotions are encoded as isolated, dissociated fragments rather than integrated. Van der Kolk frames this numbing/blanking-out response as something that can be triggered by reminders of past trauma, occurring when the fight/flight/freeze response doesn't fully resolve."
+  },
+  {
+    "book": "Games People Play",
+    "question": "My coworker always seems to twist conversations so that I end up apologizing even when I didn't do anything wrong. What's happening?",
+    "ground_truth": "Games People Play defines a 'game' as an ongoing series of complementary ulterior transactions progressing to a well-defined, predictable outcome, with a concealed motivation and a 'payoff' — distinguishing it from an honest, straightforward exchange. A close match is 'See What You Made Me Do' (SWYMD), where one person reacts to an interruption by turning on the other person and blaming them, using it as a lever to control the interaction or avoid responsibility."
+  },
+  {
+    "book": "Games People Play",
+    "question": "What are 'ego states' and how do they affect how I argue with my parents?",
+    "ground_truth": "Berne describes ego states in Games People Play as coherent systems of feelings and related behavior patterns, colloquially called Parent, Adult, and Child. At any given moment a person exhibits one of these ego states and can shift between them; arguments with parents often play out as a Parent-Child exchange rather than an Adult-Adult one."
+  },
+  {
+    "book": "Thinking Fast and Slow",
+    "question": "Why do I overestimate how likely rare disasters are, like plane crashes?",
+    "ground_truth": "This is the availability heuristic from Thinking, Fast and Slow, defined as the process of judging frequency or probability by how easily examples come to mind, substituting an easier question for a harder one. Kahneman notes this heuristic can distort judgment of risk, since memorable events feel more likely than their actual statistical frequency."
+  },
+  {
+    "book": "Nonviolent Communication",
+    "question": "Every time I try to bring up a problem with my roommate, it turns into a fight. How can I phrase things better?",
+    "ground_truth": "Nonviolent Communication's four components are observations, feelings, needs, and requests. Rosenberg's example: 'When I see two balls of soiled socks under the coffee table... I feel irritated because I am needing more order in the rooms we share' followed by a specific request — separating a factual observation from judgment, naming the feeling and need, and making a concrete request, rather than an accusatory statement."
+  }
+]

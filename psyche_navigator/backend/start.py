@@ -1,8 +1,14 @@
+"""
+Application Entry Point for the Backend.
+
+This is the first file Python executes. Loads environment variables
+(API keys) from the .env file, then starts the FastAPI server with
+Uvicorn on port 8000 with hot-reload enabled.
+"""
+
 import uvicorn
-import os
 from dotenv import load_dotenv
-# this is the first file Python executes
-# load the environment variables (API keys from the .env file
+
 load_dotenv()
 
 if __name__ == "__main__":

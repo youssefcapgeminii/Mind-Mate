@@ -13,6 +13,10 @@ venv/
 # ChromaDB — large local vector database, rebuild with ingest.py
 psyche_navigator/backend/chroma_db/
 
+# RAGAS eval output — local run artifacts, rebuild with eval/run_eval.py
+psyche_navigator/backend/eval/results.csv
+psyche_navigator/backend/eval/pipeline_runs.json
+
 # PDF books — large and copyrighted
 psyche_navigator/backend/books/
 psyche_navigator/updated_books/

@@ -3,7 +3,7 @@ from agent.state import AgentState
 from llm_factory import make_llm
 from agent.logger import log_node_start, log_input, log_llm, log_warn, log_route
 
-llm = make_llm(temperature=0.3) # Some creativity is needed to rephrase differently
+llm = make_llm(temperature=0.3)
 
 prompt = ChatPromptTemplate.from_template("""
 You tried to help with: {user_message}
@@ -20,6 +20,13 @@ Return only the search query, nothing else.
 
 
 def run(state: AgentState) -> AgentState:
+    """
+    Rephrase the search query after a failed retrieval attempt.
+
+    Uses the original user message, the previously failed query, and the
+    evaluator's rejection reason to generate a more targeted search query
+    for the next ChromaDB retrieval attempt.
+    """
     log_node_start("query_builder")
     log_warn("QUERY_BUILDER", "retry triggered", f'attempt {state["retrieval_attempts"]}/3 failed')
     log_input("QUERY_BUILDER", "failed query", f'"{state["current_query"]}"')

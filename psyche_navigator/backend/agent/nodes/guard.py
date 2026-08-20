@@ -25,9 +25,14 @@ Return exactly one word: relevant or off_topic
 """)
 
 def run(state: AgentState) -> AgentState:
-    """first node in the graph. asks the LLM if the user's message is about
-    psychology/personal issues. if not, returns a polite rejection and stops
-    the graph early (skips retrieval, psychologist, etc.)."""
+    """
+    Classify the user's message and gate entry into the agent pipeline.
+
+    Asks the LLM whether the message is about psychology or personal issues.
+    If off-topic, sets a canned rejection response and flags is_off_topic
+    so the graph stops at END. If relevant, allows the pipeline to continue
+    to the retriever node.
+    """
     user_message = state["messages"][-1]["content"]
     state["current_query"] = user_message
     state["retrieval_attempts"] = 0
@@ -35,14 +40,18 @@ def run(state: AgentState) -> AgentState:
     log_node_start("guard")
     preview = user_message[:120] + ("..." if len(user_message) > 120 else "")
     log_input("GUARD", "user message", f'"{preview}"')
-
+    """
+    LangChain pipeline using the pipe (|) operator:
+    1. Takes the prompt template and plugs in the user_message.
+    2. Sends the filled prompt to the LLM.
+    3. .invoke() runs both steps and gives back the LLM's answer.
+    """
     response = (prompt | llm).invoke({"user_message": user_message})
     classification = response.content.strip().lower()
 
     log_llm("GUARD", "classification", classification.upper())
 
     if "off_topic" in classification:
-        # off-topic: set a canned response and the graph will stop at END
         state["is_off_topic"] = True
         state["final_response"] = _OFF_TOPIC_MESSAGE
         state["action_plan"] = []

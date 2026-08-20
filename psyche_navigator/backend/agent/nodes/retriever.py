@@ -1,19 +1,12 @@
 from rag.retriever import build_retriever
 from agent.state import AgentState
 from agent.logger import log_node_start, log_input, log_info, log_ok
+from books import BOOK_TITLES
 
 _retriever = build_retriever()
 
-_KNOWN_BOOKS = {
-    "Feeling Good",
-    "Attached",
-    "The Body Keeps the Score",
-    "Games People Play",
-    "Thinking Fast and Slow",
-    "Nonviolent Communication",
-}
+_KNOWN_BOOKS = set(BOOK_TITLES)
 
-# foreign book titles that appear inside PDF text as cross-references
 _FOREIGN_MARKERS = [
     "The Gifts of Imperfection",
     "The 7 Habits",
@@ -26,13 +19,18 @@ _FOREIGN_MARKERS = [
     "Daring Greatly",
     "Rising Strong",
 ]
+"""
+Foreign book titles that appear inside PDF text as cross-references.
+Chunks mentioning these are filtered out to prevent citation confusion.
+"""
 
-
-# ── Filtering helpers ─────────────────────────────────────────────────────────
 
 def _has_foreign_reference(text: str) -> bool:
-    """checks if the chunk text mentions any book title from _FOREIGN_MARKERS.
-    returns True if a foreign book is found (meaning this chunk should be rejected)."""
+    """
+    Check if chunk text mentions any book title from the foreign markers list.
+
+    Returns True if a foreign book is found, meaning this chunk should be rejected.
+    """
     for marker in _FOREIGN_MARKERS:
         if marker and marker in text:
             return True
@@ -40,9 +38,15 @@ def _has_foreign_reference(text: str) -> bool:
 
 
 def _filter_chunks(results):
-    """takes raw ChromaDB results and removes bad chunks.
-    filter 1: reject if the chunk's source label is not one of our 6 books.
-    filter 2: reject if the chunk text mentions a foreign book title."""
+    """
+    Filter raw ChromaDB results to remove unreliable chunks.
+
+    Applies two filters:
+        1. Reject if the chunk's source label is not one of the 6 known books.
+        2. Reject if the chunk text mentions a foreign book title.
+
+    Returns a tuple of (clean_chunks, filtered_out_count).
+    """
     chunks = []
     filtered_out = 0
     for doc in results:
@@ -61,14 +65,20 @@ def _filter_chunks(results):
     return chunks, filtered_out
 
 
-# ── Node entry point ──────────────────────────────────────────────────────────
-
 def run(state: AgentState) -> AgentState:
+    """
+    Execute a similarity search against ChromaDB and filter the results.
+
+    Queries the vectorstore with the current search query, filters out
+    chunks from unknown sources or containing foreign book references,
+    and updates the state with clean chunks. Increments the retrieval
+    attempt counter.
+    """
     log_node_start("retriever")
     attempt_num = state["retrieval_attempts"] + 1
     log_input("RETRIEVER", "query", f'"{state["current_query"]}"')
     log_info("RETRIEVER", "attempt", f"{attempt_num}/3")
-
+# converts input message into a vector and retrieves the most similar chunks from ChromaDB
     results = _retriever.invoke(state["current_query"])
     log_info("RETRIEVER", "raw hits from ChromaDB", str(len(results)))
 
@@ -79,7 +89,7 @@ def run(state: AgentState) -> AgentState:
     for index, chunk in enumerate(chunks, 1):
         preview = chunk["text"][:90].replace("\n", " ")
         log_info("RETRIEVER", f"  chunk {index}", f'[{chunk["source_book"]}, p.{chunk["page"]}] "{preview}..."')
-
+# Stores the clean chunks in the shared state
     state["retrieved_chunks"] = chunks
     state["retrieval_attempts"] += 1
     return state

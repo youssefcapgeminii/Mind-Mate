@@ -22,12 +22,18 @@ One question only. Warm, conversational tone."""
 
 
 def run(state: AgentState) -> AgentState:
+    """
+    Generate a contextual follow-up question for the user.
+
+    Builds the full conversation history as LangChain message objects
+    so the LLM has context and avoids repeating questions from earlier turns.
+    Increments the turn count and signals the end of the current loop iteration.
+    """
     system_content = _SYSTEM.format(
         response=state["final_response"],
         action_plan="\n".join(state["action_plan"] or []),
     )
-    # build conversation with full history so the LLM doesn't repeat
-    # questions that were already asked in earlier turns
+
     conversation = [SystemMessage(content=system_content)]
     for message in state["messages"][:-1]:
         role = message.get("role", "")

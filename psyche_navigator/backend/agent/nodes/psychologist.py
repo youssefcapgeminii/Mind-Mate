@@ -1,6 +1,7 @@
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from agent.state import AgentState
 from llm_factory import make_llm
+from books import BOOK_TITLES
 
 llm = make_llm(temperature=0.5)
 
@@ -53,8 +54,7 @@ When you reference a concept from an excerpt, ALWAYS cite it as: Book Name (p.X)
 Example: "According to Nonviolent Communication (p.42), observations should be..."
 Only cite books from the label at the top of each excerpt — never from inside the text.
 Only cite a book if you actually used its content in your response.
-Allowed books: Feeling Good, Attached, The Body Keeps the Score,
-Games People Play, Thinking Fast and Slow, Nonviolent Communication.
+Allowed books: {allowed_books}.
 Skip any excerpt that feels unrelated to the user's situation.
 
 Book excerpts:
@@ -62,12 +62,22 @@ Book excerpts:
 
 
 def run(state: AgentState) -> AgentState:
+    """
+    Generate grounded psychological advice from book excerpts and conversation history.
+
+    Builds context from retrieved chunks with source book and page citations,
+    then constructs the full conversation as LangChain message objects so the LLM
+    sees prior exchanges. Only marks a book as actively used if it appears cited
+    in the final response text.
+    """
     context = "\n\n".join([
         f"[{c['source_book']}, p.{c['page']}]\n{c['text']}"
         for c in state["retrieved_chunks"]
     ])
-# LLM sees the history of conversation as messages
-    msgs = [SystemMessage(content=_SYSTEM.format(context=context))]
+    msgs = [SystemMessage(content=_SYSTEM.format(
+        context=context,
+        allowed_books=", ".join(BOOK_TITLES),
+    ))]
     for msg in state["messages"][:-1]:
         role = msg.get("role", "")
         content = msg.get("content", "")
@@ -76,11 +86,10 @@ def run(state: AgentState) -> AgentState:
         elif role in ("assistant", "ai"):
             msgs.append(AIMessage(content=content))
     msgs.append(HumanMessage(content=state["messages"][-1]["content"]))
-
+# sends the full conversation to the LLM and gets a response
     response = llm.invoke(msgs)
     state["final_response"] = response.content
-
-    # Only mark a book as used if it actually appears cited in the response
+# marks which books were actually cited in the final response for booksider display in frontend
     all_books = list(set([c["source_book"] for c in state["retrieved_chunks"]]))
     state["active_frameworks"] = [b for b in all_books if b in response.content]
     return state

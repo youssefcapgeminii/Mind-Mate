@@ -1,6 +1,11 @@
-# ANSI escape codes for colored terminal output
-# these codes tell the terminal to change text color/style
-# e.g. "\033[92m" turns text green, "\033[0m" resets back to normal
+"""
+Terminal Logging Utilities for the PsycheNavigator Agent.
+
+Provides colored, structured log output for each node in the agent graph.
+Uses ANSI escape codes to change text color and style in the terminal
+(e.g. '\\033[92m' turns text green, '\\033[0m' resets back to normal).
+"""
+
 RESET   = "\033[0m"
 BOLD    = "\033[1m"
 DIM     = "\033[2m"
@@ -14,15 +19,21 @@ ORANGE  = "\033[33m"
 
 
 def _tag(node: str, color: str) -> str:
-    """creates a colored tag like [GUARD] or [RETRIEVER] for log lines"""
+    """
+    Create a colored tag like [GUARD] or [RETRIEVER] for log lines.
+    """
     return f"{color}{BOLD}[{node}]{RESET}"
 
 
 def log_node_start(node: str):
-    """prints a visible box in the terminal when a node starts running
-    e.g. ┌──────────────────────┐
-         │  NODE: GUARD         │
-         └──────────────────────┘"""
+    """
+    Print a visible box in the terminal when a node starts running.
+
+    Example output:
+        ┌──────────────────────┐
+        │  NODE: GUARD         │
+        └──────────────────────┘
+    """
     width = 58
     bar = "─" * width
     label = f"  NODE: {node.upper()}"
@@ -32,30 +43,30 @@ def log_node_start(node: str):
 
 
 def log_input(node: str, label: str, value: str):
-    """logs what data a node received (yellow)"""
+    """Log what data a node received, displayed in yellow."""
     print(f"{_tag(node, YELLOW)}  INPUT    {BOLD}{label}:{RESET} {DIM}{value}{RESET}", flush=True)
 
 
 def log_llm(node: str, label: str, value: str):
-    """logs what the LLM returned (magenta)"""
+    """Log what the LLM returned, displayed in magenta."""
     print(f"{_tag(node, MAGENTA)}  LLM      {BOLD}{label}:{RESET} {value}", flush=True)
 
 
 def log_ok(node: str, label: str, value: str):
-    """logs a success result with a checkmark (green)"""
+    """Log a success result with a checkmark, displayed in green."""
     print(f"{_tag(node, GREEN)}  ✓        {BOLD}{label}:{RESET} {GREEN}{value}{RESET}", flush=True)
 
 
 def log_warn(node: str, label: str, value: str):
-    """logs a failure or problem with an X mark (red)"""
+    """Log a failure or problem with an X mark, displayed in red."""
     print(f"{_tag(node, RED)}  ✗        {BOLD}{label}:{RESET} {RED}{value}{RESET}", flush=True)
 
 
 def log_info(node: str, label: str, value: str):
-    """logs general information (cyan)"""
+    """Log general information, displayed in cyan."""
     print(f"{_tag(node, CYAN)}  INFO     {BOLD}{label}:{RESET} {value}", flush=True)
 
 
 def log_route(node: str, destination: str):
-    """logs which node the graph will go to next (blue)"""
+    """Log which node the graph will route to next, displayed in blue."""
     print(f"{_tag(node, BLUE)}  ROUTE    → {BOLD}{CYAN}{destination}{RESET}", flush=True)

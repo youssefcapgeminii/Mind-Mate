@@ -2,7 +2,6 @@ import os
 import sys
 import re
 
-# adds the parent directory to Python's import path so we can import from backend/
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from dotenv import load_dotenv
@@ -13,26 +12,41 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
 import chromadb
 
-# patterns that detect junk text inside PDFs
-# some PDF pages contain ads, promotions, or website links instead of real content
-# e.g. "coupon code", "save an additional 20%", "companion workbook"
-# if any of these patterns match, the chunk is thrown away
+from books import BOOK_TITLES
+
 _JUNK_PATTERNS = [
     r"coupon\s+code",
     r"save\s+an?\s+additional\s+\d+\s*%",
     r"companion\s+workbook",
     r"nonviolentcommunication\.com",
 ]
+"""
+Regex patterns that detect junk text inside PDFs.
 
-# detects index pages at the back of books
-# index entries look like "motivation, 42-45" or "self-esteem, 100–103"
-# if a chunk has more than 4 of these, it's an index page, not real content
+Some PDF pages contain ads, promotions, or website links instead of real content
+(e.g. 'coupon code', 'save an additional 20%', 'companion workbook').
+If any of these patterns match, the chunk is discarded during ingestion.
+"""
+
 _INDEX_ENTRY = re.compile(r'\b[\w\s]+,\s+\d+[–\-]\d+')
+"""
+Pattern to detect index pages at the back of books.
+
+Index entries look like 'motivation, 42-45' or 'self-esteem, 100-103'.
+If a chunk has more than 4 matches, it is classified as an index page
+rather than real content and is discarded.
+"""
 
 
 def _is_content(text: str) -> bool:
-    """decides if a chunk is real book content or junk that should be skipped.
-    returns False for: short text (headers/footers), promotional text, index pages."""
+    """
+    Determine if a chunk is real book content or junk that should be skipped.
+
+    Returns False for:
+        - Short text under 120 characters (headers, footers, page numbers).
+        - Promotional text matching any junk pattern.
+        - Index pages with more than 4 index-style entries.
+    """
     if len(text.strip()) < 120:
         return False
     lower = text.lower()
@@ -44,38 +58,47 @@ def _is_content(text: str) -> bool:
     return True
 
 
-BOOKS = {
-    "Feeling Good":                "books/feeling_good.pdf",
-    "Attached":                    "books/attached.pdf",
-    "The Body Keeps the Score":    "books/body_keeps_score.pdf",
-    "Games People Play":           "books/games_people_play.pdf",
-    "Thinking Fast and Slow":      "books/thinking_fast_and_slow.pdf",
-    "Nonviolent Communication":    "books/nonviolent_communication.pdf",
+_BOOK_FILES = {
+    "Feeling Good":                "feeling_good.pdf",
+    "Attached":                    "attached.pdf",
+    "The Body Keeps the Score":    "body_keeps_score.pdf",
+    "Games People Play":           "games_people_play.pdf",
+    "Thinking Fast and Slow":      "thinking_fast_and_slow.pdf",
+    "Nonviolent Communication":    "nonviolent_communication.pdf",
 }
+
+BOOKS = {title: f"books/{_BOOK_FILES[title]}" for title in BOOK_TITLES}
+
+
 def ingest():
-    """reads all 6 PDF books, splits them into small text chunks,
-    converts each chunk into a vector (embedding), and stores
-    everything in ChromaDB so we can search by similarity later."""
+    """
+    Run the full ingestion pipeline: PDF loading, chunking, embedding, and storage.
+
+    Steps:
+        1. Load the local embedding model (all-MiniLM-L6-v2) with normalized
+           embeddings so cosine similarity works correctly.
+        2. For each book: load the PDF, split into 800-character chunks with
+           120-character overlap (so sentences aren't cut in half), attach
+           metadata (source book and page number), and filter out junk.
+        3. Create a ChromaDB collection using cosine similarity (ranges from
+           0 for completely different to 1 for identical meaning).
+        4. Convert all chunk text into vectors and insert in batches of 500
+           to avoid memory issues.
+    """
     print("Loading local embedding model (all-MiniLM-L6-v2)...")
-    # the embedding model converts text into numbers (vectors)
-    # normalize_embeddings=True scales all vectors to the same length
-    # so cosine similarity works correctly
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2",
         model_kwargs={"device": "cpu"},
         encode_kwargs={"normalize_embeddings": True},
     )
 
-    # splits PDF text into chunks of 800 characters
-    # with 120 character overlap so sentences aren't cut in half
     splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=120)
     all_chunks = []
 
-# Process each book: load PDF, split into chunks, and keep metadata (source book and page number)
     for book_name, pdf_path in BOOKS.items():
         print(f"Loading: {book_name}")
         loader = PyPDFLoader(pdf_path)
-        pages = loader.load()
+        pages = loader.load() #returns documents with page_content and metadata (page number) by pypdfloader
         chunks = splitter.split_documents(pages)
         for chunk in chunks:
             chunk.metadata["source"] = book_name
@@ -86,21 +109,17 @@ def ingest():
     total = len(all_chunks)
     print(f"\nTotal: {total} chunks. Storing in ChromaDB (local, no rate limits)...")
 
-    # create a ChromaDB collection that uses cosine similarity to compare vectors
-    # cosine similarity ranges from 0 (completely different) to 1 (identical meaning)
     client = chromadb.PersistentClient(path="./chroma_db")
     collection = client.create_collection(
         name="langchain",
         metadata={"hnsw:space": "cosine"},
     )
 
-    # convert all chunk text into vectors (lists of numbers)
     texts = [chunk.page_content for chunk in all_chunks]
     metadatas = [chunk.metadata for chunk in all_chunks]
     chunk_ids = [str(index) for index in range(len(all_chunks))]
     vectors = embeddings.embed_documents(texts)
 
-    # insert 500 chunks at a time to avoid crashing memory
     batch_size = 500
     for start_index in range(0, len(texts), batch_size):
         collection.add(
@@ -116,3 +135,4 @@ def ingest():
 
 if __name__ == "__main__":
     ingest()
+    
